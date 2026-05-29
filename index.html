@@ -87,6 +87,38 @@
     .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.4rem; }
     .status-dot.online { background: var(--success); }
     .status-dot.offline { background: #f97316; }
+
+    /* Edit Modal Styles */
+    .edit-modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6); z-index: 1000;
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+    }
+    .edit-modal {
+      background: #fff; border-radius: 12px; width: 100%; max-width: 550px;
+      max-height: 85vh; overflow-y: auto; padding: 1.5rem;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    .edit-modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.8rem;
+    }
+    .edit-modal-header h3 { margin: 0; font-size: 1.1rem; }
+    .edit-modal-close {
+      background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;
+    }
+    .edit-field { margin-bottom: 0.8rem; }
+    .edit-field label { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.3rem; display: block; color: #64748b; }
+    .edit-field input, .edit-field select, .edit-field textarea {
+      width: 100%; padding: 0.6rem; border: 1px solid #e2e8f0; border-radius: 6px;
+      font-size: 0.9rem; font-family: inherit;
+    }
+    .edit-save-btn {
+      width: 100%; padding: 0.7rem; border-radius: 8px; background: #0b3c5d;
+      color: #fff; border: none; font-weight: 700; font-size: 0.95rem; cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    .edit-save-btn:hover { opacity: 0.9; }
   </style>
 </head>
 <body>
@@ -127,22 +159,10 @@
     <div class="card">
       <h2>➕ Record New Transfer</h2>
       <div class="form-grid">
-        <div>
-          <label>Select Priest</label>
-          <select id="transferPriestSelect"><option value="">Choose priest...</option></select>
-        </div>
-        <div>
-          <label>Current Station</label>
-          <input type="text" id="transferFromStation" readonly>
-        </div>
-        <div>
-          <label>Current Deanery</label>
-          <input type="text" id="transferFromDeanery" readonly>
-        </div>
-        <div>
-          <label>New Station (Church Name) *</label>
-          <input type="text" id="transferToStation" placeholder="e.g., St. Mary's Church, Igbonla">
-        </div>
+        <div><label>Select Priest</label><select id="transferPriestSelect"><option value="">Choose priest...</option></select></div>
+        <div><label>Current Station</label><input type="text" id="transferFromStation" readonly></div>
+        <div><label>Current Deanery</label><input type="text" id="transferFromDeanery" readonly></div>
+        <div><label>New Station (Church Name) *</label><input type="text" id="transferToStation" placeholder="e.g., St. Mary's Church, Igbonla"></div>
         <div>
           <label>New Deanery</label>
           <select id="transferToDeanery">
@@ -158,18 +178,11 @@
             <option value="Igosun Deanery">Igosun Deanery</option>
           </select>
         </div>
-        <div>
-          <label>Transfer Date</label>
-          <input type="date" id="transferDate">
-        </div>
-        <div style="grid-column: span 2;">
-          <label>Summary / Notes</label>
-          <textarea id="transferSummary" rows="2" placeholder="e.g., Transferred as Archdeacon, New posting, etc."></textarea>
-        </div>
+        <div><label>Transfer Date</label><input type="date" id="transferDate"></div>
+        <div style="grid-column: span 2;"><label>Summary / Notes</label><textarea id="transferSummary" rows="2" placeholder="e.g., Transferred as Archdeacon, New posting, etc."></textarea></div>
       </div>
       <button class="btn btn-primary" onclick="recordTransfer()" style="margin-top:1rem;">📋 Record Transfer & Update</button>
     </div>
-
     <div class="card">
       <h2>📜 Transfer History</h2>
       <div style="overflow-x:auto;">
@@ -188,17 +201,18 @@
       <div class="form-grid">
         <div><label>Full Name *</label><input type="text" id="newPriestName" placeholder="Rev. John Doe"></div>
         <div>
-  <label>Title *</label>
-  <select id="newPriestTitle">
-    <option value="">Select title...</option>
-    <option value="Venerable">Venerable</option>
-    <option value="Reverend Canon">Reverend Canon</option>
-    <option value="Reverend">Reverend</option>
-    <option value="Pastor">Pastor</option>
-    <option value="Evangelist">Evangelist</option>
-    <option value="Mission Partner">Mission Partner</option>
-  </select>
-</div>
+          <label>Title *</label>
+          <select id="newPriestTitle">
+            <option value="">Select title...</option>
+            <option value="Bishop">Bishop</option>
+            <option value="Venerable">Venerable</option>
+            <option value="Reverend Canon">Reverend Canon</option>
+            <option value="Reverend">Reverend</option>
+            <option value="Pastor">Pastor</option>
+            <option value="Evangelist">Evangelist</option>
+            <option value="Mission Partner">Mission Partner</option>
+          </select>
+        </div>
         <div><label>Station *</label><input type="text" id="newPriestStation" placeholder="St. Mary's Church, Location"></div>
         <div>
           <label>Deanery *</label>
@@ -229,10 +243,7 @@
     <div class="card">
       <h2>📸 Upload Priest Photo</h2>
       <div class="form-grid">
-        <div>
-          <label>Select Priest</label>
-          <select id="uploadPriestSelect"><option value="">Choose priest...</option></select>
-        </div>
+        <div><label>Select Priest</label><select id="uploadPriestSelect"><option value="">Choose priest...</option></select></div>
         <div>
           <label>Photo File</label>
           <div class="file-upload-area" id="fileDropZone">
@@ -358,7 +369,6 @@ function getImageUrl(path) {
   return `${SUPABASE_URL}/storage/v1/object/public/priests/${path}`;
 }
 
-// Auto-fill current station and deanery when priest is selected
 document.getElementById('transferPriestSelect').addEventListener('change', function() {
   const priest = allPriests.find(p => p.id === this.value);
   document.getElementById('transferFromStation').value = priest ? priest.station : '';
@@ -374,26 +384,14 @@ async function recordTransfer() {
   const toDeanerySelect = document.getElementById('transferToDeanery').value;
   const transferDate = document.getElementById('transferDate').value;
   const summary = document.getElementById('transferSummary').value.trim();
-  
   if (!priestId) { showToast('Please select a priest.', 'error'); return; }
   if (!toStation) { showToast('Please enter the new station/church name.', 'error'); return; }
-
   const priest = allPriests.find(p => p.id === priestId);
   const newDeanery = toDeanerySelect || priest?.deanery || '';
   const isDeaneryChange = newDeanery !== priest?.deanery;
-
   try {
-    await supabaseFetch('transfers', {
-      method: 'POST',
-      headers: { 'Prefer': 'return=representation' },
-      body: JSON.stringify({ priest_id: priestId, from_station: fromStation, to_station: toStation, transfer_date: transferDate, summary }),
-    });
-    await supabaseFetch(`priests?id=eq.${priestId}`, {
-      method: 'PATCH',
-      headers: { 'Prefer': 'return=representation' },
-      body: JSON.stringify({ station: toStation, deanery: newDeanery, updated_at: new Date().toISOString() }),
-    });
-
+    await supabaseFetch('transfers', { method: 'POST', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify({ priest_id: priestId, from_station: fromStation, to_station: toStation, transfer_date: transferDate, summary }) });
+    await supabaseFetch(`priests?id=eq.${priestId}`, { method: 'PATCH', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify({ station: toStation, deanery: newDeanery, updated_at: new Date().toISOString() }) });
     const deaneryMsg = isDeaneryChange ? ` | Deanery: ${priest?.deanery} → ${newDeanery}` : '';
     showToast(`✅ Transfer recorded!${deaneryMsg}`);
     document.getElementById('transferToStation').value = '';
@@ -438,15 +436,22 @@ function editPriest(id) {
   const p = allPriests.find(x => x.id === id);
   if (!p) return;
 
-  const modalBody = `
-    <div style="display:flex;flex-direction:column;gap:0.8rem;">
-      <div>
-        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Full Name</label>
-        <input type="text" id="editName" value="${p.name.replace(/"/g, '&quot;')}" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">
+  const overlay = document.createElement('div');
+  overlay.className = 'edit-modal-overlay';
+  
+  overlay.innerHTML = `
+    <div class="edit-modal">
+      <div class="edit-modal-header">
+        <h3>✏️ Edit: ${p.name}</h3>
+        <button class="edit-modal-close" id="editModalClose">&times;</button>
       </div>
-      <div>
-        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Title</label>
-        <select id="editTitle" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">
+      <div class="edit-field">
+        <label>Full Name</label>
+        <input type="text" id="editName" value="${p.name.replace(/"/g, '&quot;')}">
+      </div>
+      <div class="edit-field">
+        <label>Title</label>
+        <select id="editTitle">
           <option value="">Select title...</option>
           <option value="Bishop" ${p.title === 'Bishop' ? 'selected' : ''}>Bishop</option>
           <option value="Venerable" ${p.title === 'Venerable' ? 'selected' : ''}>Venerable</option>
@@ -457,13 +462,13 @@ function editPriest(id) {
           <option value="Mission Partner" ${p.title === 'Mission Partner' ? 'selected' : ''}>Mission Partner</option>
         </select>
       </div>
-      <div>
-        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Station</label>
-        <input type="text" id="editStation" value="${p.station.replace(/"/g, '&quot;')}" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">
+      <div class="edit-field">
+        <label>Station</label>
+        <input type="text" id="editStation" value="${p.station.replace(/"/g, '&quot;')}">
       </div>
-      <div>
-        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Deanery</label>
-        <select id="editDeanery" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">
+      <div class="edit-field">
+        <label>Deanery</label>
+        <select id="editDeanery">
           <option value="">Select deanery...</option>
           <option value="Bishop's Court" ${p.deanery === "Bishop's Court" ? 'selected' : ''}>Bishop's Court</option>
           <option value="Cathedral" ${p.deanery === 'Cathedral' ? 'selected' : ''}>Cathedral</option>
@@ -476,57 +481,50 @@ function editPriest(id) {
           <option value="Igosun Deanery" ${p.deanery === 'Igosun Deanery' ? 'selected' : ''}>Igosun Deanery</option>
         </select>
       </div>
-      <div>
-        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Office</label>
-        <input type="text" id="editOffice" value="${(p.office || '').replace(/"/g, '&quot;')}" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">
+      <div class="edit-field">
+        <label>Office</label>
+        <input type="text" id="editOffice" value="${(p.office || '').replace(/"/g, '&quot;')}">
       </div>
-      <div>
-        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Phone</label>
-        <input type="tel" id="editPhone" value="${(p.phone || '').replace(/"/g, '&quot;')}" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">
+      <div class="edit-field">
+        <label>Phone</label>
+        <input type="tel" id="editPhone" value="${(p.phone || '').replace(/"/g, '&quot;')}">
       </div>
-      <div>
-        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Email</label>
-        <input type="email" id="editEmail" value="${(p.email || '').replace(/"/g, '&quot;')}" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">
+      <div class="edit-field">
+        <label>Email</label>
+        <input type="email" id="editEmail" value="${(p.email || '').replace(/"/g, '&quot;')}">
       </div>
-      <div>
-        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Biography</label>
-        <textarea id="editBio" rows="3" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">${(p.biography || '').replace(/"/g, '&quot;')}</textarea>
+      <div class="edit-field">
+        <label>Biography</label>
+        <textarea id="editBio" rows="3">${(p.biography || '').replace(/"/g, '&quot;')}</textarea>
       </div>
+      <button class="edit-save-btn" id="editSaveBtn">💾 Save Changes</button>
     </div>
   `;
-
-  window.DioceseModal.open(`Edit: ${p.name}`, modalBody);
   
-  // Add save button after modal opens
-  setTimeout(() => {
-    const modalBodyEl = document.getElementById('modal-content-portal');
-    if (modalBodyEl) {
-      const saveBtn = document.createElement('button');
-      saveBtn.textContent = '💾 Save Changes';
-      saveBtn.style.cssText = 'margin-top:1rem;width:100%;padding:0.7rem;border-radius:8px;background:var(--primary-color);color:#fff;border:none;font-weight:700;font-size:0.95rem;cursor:pointer;font-family:inherit;';
-      saveBtn.onclick = async () => {
-        const updatedData = {
-          name: document.getElementById('editName')?.value?.trim() || p.name,
-          title: document.getElementById('editTitle')?.value || p.title,
-          station: document.getElementById('editStation')?.value?.trim() || p.station,
-          deanery: document.getElementById('editDeanery')?.value || p.deanery,
-          office: document.getElementById('editOffice')?.value?.trim() || '',
-          phone: document.getElementById('editPhone')?.value?.trim() || '',
-          email: document.getElementById('editEmail')?.value?.trim() || '',
-          biography: document.getElementById('editBio')?.value?.trim() || '',
-          updated_at: new Date().toISOString(),
-        };
-        
-        if (!updatedData.name || !updatedData.station || !updatedData.deanery) {
-          showToast('Name, Station, and Deanery are required.', 'error');
-          return;
-        }
-        
-        await updatePriest(id, updatedData);
-      };
-      modalBodyEl.appendChild(saveBtn);
+  document.body.appendChild(overlay);
+  
+  overlay.querySelector('#editModalClose').onclick = () => overlay.remove();
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+  
+  overlay.querySelector('#editSaveBtn').onclick = async () => {
+    const updatedData = {
+      name: document.getElementById('editName')?.value?.trim() || p.name,
+      title: document.getElementById('editTitle')?.value || p.title,
+      station: document.getElementById('editStation')?.value?.trim() || p.station,
+      deanery: document.getElementById('editDeanery')?.value || p.deanery,
+      office: document.getElementById('editOffice')?.value?.trim() || '',
+      phone: document.getElementById('editPhone')?.value?.trim() || '',
+      email: document.getElementById('editEmail')?.value?.trim() || '',
+      biography: document.getElementById('editBio')?.value?.trim() || '',
+      updated_at: new Date().toISOString(),
+    };
+    if (!updatedData.name || !updatedData.station || !updatedData.deanery) {
+      showToast('Name, Station, and Deanery are required.', 'error');
+      return;
     }
-  }, 100);
+    await updatePriest(id, updatedData);
+    overlay.remove();
+  };
 }
 
 async function updatePriest(id, data) {
