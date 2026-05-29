@@ -48,6 +48,7 @@
       border-radius: 6px; font-size: 0.9rem; font-family: inherit;
     }
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(11,60,93,0.1); }
+    input[readonly] { background: var(--bg); color: var(--text2); cursor: not-allowed; }
     
     .btn {
       padding: 0.6rem 1.2rem; border-radius: 6px; border: none; cursor: pointer;
@@ -126,14 +127,49 @@
     <div class="card">
       <h2>➕ Record New Transfer</h2>
       <div class="form-grid">
-        <div><label>Select Priest</label><select id="transferPriestSelect"><option value="">Choose priest...</option></select></div>
-        <div><label>From Station (current)</label><input type="text" id="transferFromStation" readonly></div>
-        <div><label>To Station (new)</label><input type="text" id="transferToStation"></div>
-        <div><label>Transfer Date</label><input type="date" id="transferDate"></div>
-        <div style="grid-column: span 2;"><label>Summary</label><textarea id="transferSummary" rows="2"></textarea></div>
+        <div>
+          <label>Select Priest</label>
+          <select id="transferPriestSelect"><option value="">Choose priest...</option></select>
+        </div>
+        <div>
+          <label>Current Station</label>
+          <input type="text" id="transferFromStation" readonly>
+        </div>
+        <div>
+          <label>Current Deanery</label>
+          <input type="text" id="transferFromDeanery" readonly>
+        </div>
+        <div>
+          <label>New Station (Church Name) *</label>
+          <input type="text" id="transferToStation" placeholder="e.g., St. Mary's Church, Igbonla">
+        </div>
+        <div>
+          <label>New Deanery</label>
+          <select id="transferToDeanery">
+            <option value="">Same as current</option>
+            <option value="Bishop's Court">Bishop's Court</option>
+            <option value="Cathedral">Cathedral</option>
+            <option value="Agbamu Archdeaconry">Agbamu Archdeaconry</option>
+            <option value="Oke-Ola Archdeaconry">Oke-Ola Archdeaconry</option>
+            <option value="Sanmora Archdeaconry">Sanmora Archdeaconry</option>
+            <option value="Igbonla Deanery">Igbonla Deanery</option>
+            <option value="Iludun-Oro Deanery">Iludun-Oro Deanery</option>
+            <option value="Ipee Deanery">Ipee Deanery</option>
+            <option value="Igosun Deanery">Igosun Deanery</option>
+          </select>
+        </div>
+        <div>
+          <label>Transfer Date</label>
+          <input type="date" id="transferDate">
+        </div>
+        <div style="grid-column: span 2;">
+          <label>Summary / Notes</label>
+          <textarea id="transferSummary" rows="2" placeholder="e.g., Transferred as Archdeacon, New posting, etc."></textarea>
+        </div>
       </div>
-      <button class="btn btn-primary" onclick="recordTransfer()" style="margin-top:1rem;">📋 Record Transfer</button>
+      <button class="btn btn-primary" onclick="recordTransfer()" style="margin-top:1rem;">📋 Record Transfer & Update</button>
     </div>
+
     <div class="card">
       <h2>📜 Transfer History</h2>
       <div style="overflow-x:auto;">
@@ -150,14 +186,28 @@
     <div class="card">
       <h2>➕ Add New Priest</h2>
       <div class="form-grid">
-        <div><label>Full Name *</label><input type="text" id="newPriestName"></div>
-        <div><label>Title</label><input type="text" id="newPriestTitle"></div>
-        <div><label>Station *</label><input type="text" id="newPriestStation"></div>
-        <div><label>Deanery *</label><input type="text" id="newPriestDeanery"></div>
-        <div><label>Office</label><input type="text" id="newPriestOffice"></div>
-        <div><label>Phone</label><input type="tel" id="newPriestPhone"></div>
-        <div><label>Email</label><input type="email" id="newPriestEmail"></div>
-        <div><label>Biography</label><textarea id="newPriestBio" rows="2"></textarea></div>
+        <div><label>Full Name *</label><input type="text" id="newPriestName" placeholder="Rev. John Doe"></div>
+        <div><label>Title</label><input type="text" id="newPriestTitle" placeholder="Reverend, Venerable, etc."></div>
+        <div><label>Station *</label><input type="text" id="newPriestStation" placeholder="St. Mary's Church, Location"></div>
+        <div>
+          <label>Deanery *</label>
+          <select id="newPriestDeanery">
+            <option value="">Select deanery...</option>
+            <option value="Bishop's Court">Bishop's Court</option>
+            <option value="Cathedral">Cathedral</option>
+            <option value="Agbamu Archdeaconry">Agbamu Archdeaconry</option>
+            <option value="Oke-Ola Archdeaconry">Oke-Ola Archdeaconry</option>
+            <option value="Sanmora Archdeaconry">Sanmora Archdeaconry</option>
+            <option value="Igbonla Deanery">Igbonla Deanery</option>
+            <option value="Iludun-Oro Deanery">Iludun-Oro Deanery</option>
+            <option value="Ipee Deanery">Ipee Deanery</option>
+            <option value="Igosun Deanery">Igosun Deanery</option>
+          </select>
+        </div>
+        <div><label>Office</label><input type="text" id="newPriestOffice" placeholder="Parish Priest, Archdeacon, etc."></div>
+        <div><label>Phone</label><input type="tel" id="newPriestPhone" placeholder="+234..."></div>
+        <div><label>Email</label><input type="email" id="newPriestEmail" placeholder="priest@diocese.org"></div>
+        <div><label>Biography</label><textarea id="newPriestBio" rows="2" placeholder="Optional background information..."></textarea></div>
       </div>
       <button class="btn btn-success" onclick="addNewPriest()" style="margin-top:1rem;">✅ Add Priest</button>
     </div>
@@ -168,7 +218,10 @@
     <div class="card">
       <h2>📸 Upload Priest Photo</h2>
       <div class="form-grid">
-        <div><label>Select Priest</label><select id="uploadPriestSelect"><option value="">Choose priest...</option></select></div>
+        <div>
+          <label>Select Priest</label>
+          <select id="uploadPriestSelect"><option value="">Choose priest...</option></select>
+        </div>
         <div>
           <label>Photo File</label>
           <div class="file-upload-area" id="fileDropZone">
@@ -192,10 +245,8 @@ const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 let allPriests = [];
 let allTransfers = [];
 
-// ALWAYS use service key for everything
 async function supabaseFetch(endpoint, options = {}) {
   const method = options.method || 'GET';
-  
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, {
     method: method,
     headers: {
@@ -206,13 +257,7 @@ async function supabaseFetch(endpoint, options = {}) {
     },
     body: options.body || undefined,
   });
-  
-  if (!res.ok) {
-    const err = await res.text();
-    console.error(`${method} ${endpoint} failed:`, res.status, err);
-    throw new Error(`Error ${res.status}: ${err}`);
-  }
-  
+  if (!res.ok) { const err = await res.text(); throw new Error(`Error ${res.status}: ${err}`); }
   const text = await res.text();
   if (!text || text.trim() === '') return null;
   try { return JSON.parse(text); } catch (e) { return text; }
@@ -221,23 +266,12 @@ async function supabaseFetch(endpoint, options = {}) {
 async function supabaseUpload(fileName, file) {
   const formData = new FormData();
   formData.append('file', file);
-  
   const res = await fetch(`${SUPABASE_URL}/storage/v1/object/priests/${fileName}`, {
     method: 'POST',
-    headers: {
-      'apikey': SUPABASE_SERVICE_KEY,
-      'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
-      'x-upsert': 'true',
-    },
+    headers: { 'apikey': SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`, 'x-upsert': 'true' },
     body: formData,
   });
-  
-  if (!res.ok) {
-    const err = await res.text();
-    console.error('Upload failed:', res.status, err);
-    throw new Error(`Upload error ${res.status}: ${err}`);
-  }
-  
+  if (!res.ok) { const err = await res.text(); throw new Error(`Upload error ${res.status}: ${err}`); }
   return `${SUPABASE_URL}/storage/v1/object/public/priests/${fileName}`;
 }
 
@@ -291,7 +325,7 @@ function renderTransfersTable() {
   tbody.innerHTML = allTransfers.map(t => {
     const priest = allPriests.find(p => p.id === t.priest_id);
     return `<tr>
-      <td>${priest?.name || 'Unknown'}</td>
+      <td><strong>${priest?.name || 'Unknown'}</strong></td>
       <td>${t.from_station}</td>
       <td>${t.to_station}</td>
       <td>${new Date(t.transfer_date).toLocaleDateString()}</td>
@@ -313,19 +347,30 @@ function getImageUrl(path) {
   return `${SUPABASE_URL}/storage/v1/object/public/priests/${path}`;
 }
 
+// Auto-fill current station and deanery when priest is selected
 document.getElementById('transferPriestSelect').addEventListener('change', function() {
   const priest = allPriests.find(p => p.id === this.value);
   document.getElementById('transferFromStation').value = priest ? priest.station : '';
+  document.getElementById('transferFromDeanery').value = priest ? priest.deanery : '';
   document.getElementById('transferDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('transferToDeanery').value = '';
 });
 
 async function recordTransfer() {
   const priestId = document.getElementById('transferPriestSelect').value;
   const fromStation = document.getElementById('transferFromStation').value;
   const toStation = document.getElementById('transferToStation').value.trim();
+  const toDeanerySelect = document.getElementById('transferToDeanery').value;
   const transferDate = document.getElementById('transferDate').value;
   const summary = document.getElementById('transferSummary').value.trim();
-  if (!priestId || !toStation) { showToast('Select priest and enter new station.', 'error'); return; }
+  
+  if (!priestId) { showToast('Please select a priest.', 'error'); return; }
+  if (!toStation) { showToast('Please enter the new station/church name.', 'error'); return; }
+
+  const priest = allPriests.find(p => p.id === priestId);
+  const newDeanery = toDeanerySelect || priest?.deanery || '';
+  const isDeaneryChange = newDeanery !== priest?.deanery;
+
   try {
     await supabaseFetch('transfers', {
       method: 'POST',
@@ -335,11 +380,17 @@ async function recordTransfer() {
     await supabaseFetch(`priests?id=eq.${priestId}`, {
       method: 'PATCH',
       headers: { 'Prefer': 'return=representation' },
-      body: JSON.stringify({ station: toStation, updated_at: new Date().toISOString() }),
+      body: JSON.stringify({ station: toStation, deanery: newDeanery, updated_at: new Date().toISOString() }),
     });
-    showToast('✅ Transfer recorded!');
+
+    const deaneryMsg = isDeaneryChange ? ` | Deanery: ${priest?.deanery} → ${newDeanery}` : '';
+    showToast(`✅ Transfer recorded!${deaneryMsg}`);
     document.getElementById('transferToStation').value = '';
+    document.getElementById('transferToDeanery').value = '';
     document.getElementById('transferSummary').value = '';
+    document.getElementById('transferPriestSelect').value = '';
+    document.getElementById('transferFromStation').value = '';
+    document.getElementById('transferFromDeanery').value = '';
     loadData();
   } catch (e) { showToast('Failed: ' + e.message, 'error'); }
 }
@@ -354,7 +405,7 @@ async function addNewPriest() {
   const name = document.getElementById('newPriestName').value.trim();
   const station = document.getElementById('newPriestStation').value.trim();
   const deanery = document.getElementById('newPriestDeanery').value.trim();
-  if (!name || !station || !deanery) { showToast('Name, Station, Deanery required.', 'error'); return; }
+  if (!name || !station || !deanery) { showToast('Name, Station, and Deanery are required.', 'error'); return; }
   const data = {
     name, station, deanery,
     title: document.getElementById('newPriestTitle').value.trim(),
@@ -366,7 +417,8 @@ async function addNewPriest() {
   try {
     await supabaseFetch('priests', { method: 'POST', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify(data) });
     showToast('✅ Priest added!');
-    ['newPriestName','newPriestTitle','newPriestStation','newPriestDeanery','newPriestOffice','newPriestPhone','newPriestEmail','newPriestBio'].forEach(id => document.getElementById(id).value = '');
+    ['newPriestName','newPriestTitle','newPriestStation','newPriestOffice','newPriestPhone','newPriestEmail','newPriestBio'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('newPriestDeanery').value = '';
     loadData();
   } catch (e) { showToast('Failed: ' + e.message, 'error'); }
 }
