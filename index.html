@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diocese Admin Panel - Clergy Management</title>
+  <style>
+    :root {
+      --bg: #f8fafc; --card: #fff; --text: #1e293b; --text2: #64748b;
+      --primary: #0b3c5d; --gold: #d9b310; --danger: #dc3545; --success: #28a745;
+      --border: #e2e8f0; --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    
+    .admin-header {
+      background: var(--primary); color: #fff; padding: 1rem 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .admin-header h1 { font-size: 1.3rem; }
+    .admin-header .badge { background: var(--gold); color: #000; padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: 700; font-size: 0.8rem; }
+    
+    .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 0.6rem 1.2rem; border-radius: var(--radius) var(--radius) 0 0;
+      border: none; background: transparent; cursor: pointer; font-weight: 600;
+      font-size: 0.9rem; color: var(--text2);
+    }
+    .tab-btn.active { background: var(--primary); color: #fff; }
+    
+    .panel { display: none; }
+    .panel.active { display: block; }
+    
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .card h2 { margin-bottom: 1rem; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
+    
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr; } }
+    
+    label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 0.3rem; color: var(--text2); }
+    input, select, textarea {
+      width: 100%; padding: 0.6rem 0.8rem; border: 1px solid var(--border);
+      border-radius: 6px; font-size: 0.9rem; font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(11,60,93,0.1); }
+    
+    .btn {
+      padding: 0.6rem 1.2rem; border-radius: 6px; border: none; cursor: pointer;
+      font-weight: 600; font-size: 0.9rem; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover { background: var(--border); }
+    .btn-sm { padding: 0.3rem 0.7rem; font-size: 0.75rem; }
+    
+    .priest-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .priest-table th, .priest-table td { padding: 0.7rem 0.5rem; text-align: left; border-bottom: 1px solid var(--border); }
+    .priest-table th { background: var(--bg); font-weight: 700; color: var(--text2); font-size: 0.75rem; text-transform: uppercase; }
+    .priest-table tr:hover { background: rgba(11,60,93,0.03); }
+    
+    .image-preview { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); }
+    .file-upload-area {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      padding: 1.5rem; text-align: center; cursor: pointer; color: var(--text2);
+      transition: border-color 0.2s;
+    }
+    .file-upload-area:hover { border-color: var(--primary); }
+    
+    .toast {
+      position: fixed; bottom: 2rem; right: 2rem; padding: 0.8rem 1.5rem;
+      border-radius: 8px; color: #fff; font-weight: 600; z-index: 1000;
+      animation: slideIn 0.3s ease;
+    }
+    .toast-success { background: var(--success); }
+    .toast-error { background: var(--danger); }
+    @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.4rem; }
+    .status-dot.online { background: var(--success); }
+    .status-dot.offline { background: #f97316; }
+  </style>
+</head>
+<body>
+
+<div class="admin-header">
+  <h1>⛪ Diocese Clergy Admin Panel</h1>
+  <div>
+    <span class="badge" id="connectionStatus">
+      <span class="status-dot offline"></span> Checking...
+    </span>
+  </div>
+</div>
+
+<div class="container">
+  
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="priests">👥 All Priests</button>
+    <button class="tab-btn" data-tab="transfers">🔄 Transfers</button>
+    <button class="tab-btn" data-tab="add">➕ Add New Priest</button>
+    <button class="tab-btn" data-tab="upload">📸 Upload Images</button>
+  </div>
+
+  <!-- Priests List -->
+  <div class="panel active" id="panel-priests">
+    <div class="card">
+      <h2>All Clergy Members <span style="font-size:0.8rem;color:var(--text2);" id="priestCount"></span></h2>
+      <div style="overflow-x:auto;">
+        <table class="priest-table">
+          <thead><tr><th>Photo</th><th>Name</th><th>Title</th><th>Station</th><th>Deanery</th><th>Phone</th><th>Actions</th></tr></thead>
+          <tbody id="priestsTableBody"><tr><td colspan="7">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transfers -->
+  <div class="panel" id="panel-transfers">
+    <div class="card">
+      <h2>➕ Record New Transfer</h2>
+      <div class="form-grid">
+        <div><label>Select Priest</label><select id="transferPriestSelect"><option value="">Choose priest...</option></select></div>
+        <div><label>From Station (current)</label><input type="text" id="transferFromStation" readonly></div>
+        <div><label>To Station (new)</label><input type="text" id="transferToStation"></div>
+        <div><label>Transfer Date</label><input type="date" id="transferDate"></div>
+        <div style="grid-column: span 2;"><label>Summary</label><textarea id="transferSummary" rows="2"></textarea></div>
+      </div>
+      <button class="btn btn-primary" onclick="recordTransfer()" style="margin-top:1rem;">📋 Record Transfer</button>
+    </div>
+    <div class="card">
+      <h2>📜 Transfer History</h2>
+      <div style="overflow-x:auto;">
+        <table class="priest-table">
+          <thead><tr><th>Priest</th><th>From</th><th>To</th><th>Date</th><th>Summary</th><th>Action</th></tr></thead>
+          <tbody id="transfersTableBody"><tr><td colspan="6">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Priest -->
+  <div class="panel" id="panel-add">
+    <div class="card">
+      <h2>➕ Add New Priest</h2>
+      <div class="form-grid">
+        <div><label>Full Name *</label><input type="text" id="newPriestName"></div>
+        <div><label>Title</label><input type="text" id="newPriestTitle"></div>
+        <div><label>Station *</label><input type="text" id="newPriestStation"></div>
+        <div><label>Deanery *</label><input type="text" id="newPriestDeanery"></div>
+        <div><label>Office</label><input type="text" id="newPriestOffice"></div>
+        <div><label>Phone</label><input type="tel" id="newPriestPhone"></div>
+        <div><label>Email</label><input type="email" id="newPriestEmail"></div>
+        <div><label>Biography</label><textarea id="newPriestBio" rows="2"></textarea></div>
+      </div>
+      <button class="btn btn-success" onclick="addNewPriest()" style="margin-top:1rem;">✅ Add Priest</button>
+    </div>
+  </div>
+
+  <!-- Upload Images -->
+  <div class="panel" id="panel-upload">
+    <div class="card">
+      <h2>📸 Upload Priest Photo</h2>
+      <div class="form-grid">
+        <div><label>Select Priest</label><select id="uploadPriestSelect"><option value="">Choose priest...</option></select></div>
+        <div>
+          <label>Photo File</label>
+          <div class="file-upload-area" id="fileDropZone">
+            <p>📁 Click or drag image here</p>
+            <p style="font-size:0.75rem;">JPG, PNG, WebP - Max 2MB</p>
+            <input type="file" id="imageFileInput" accept="image/*" style="display:none;">
+          </div>
+        </div>
+        <div style="text-align:center;" id="imagePreviewContainer"></div>
+      </div>
+      <button class="btn btn-primary" onclick="uploadImage()" style="margin-top:1rem;">📤 Upload Photo</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = 'https://nmnvrresvnbejbffxter.supabase.co';
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tbnZycmVzdm5iZWpiZmZ4dGVyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDA0MDUwOCwiZXhwIjoyMDk1NjE2NTA4fQ.6_BPNxFxz9WdnNfeKseUkJakGROdTBu7wszAs51nfxA';
+
+let allPriests = [];
+let allTransfers = [];
+
+// ALWAYS use service key for everything
+async function supabaseFetch(endpoint, options = {}) {
+  const method = options.method || 'GET';
+  
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, {
+    method: method,
+    headers: {
+      'apikey': SUPABASE_SERVICE_KEY,
+      'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+    body: options.body || undefined,
+  });
+  
+  if (!res.ok) {
+    const err = await res.text();
+    console.error(`${method} ${endpoint} failed:`, res.status, err);
+    throw new Error(`Error ${res.status}: ${err}`);
+  }
+  
+  const text = await res.text();
+  if (!text || text.trim() === '') return null;
+  try { return JSON.parse(text); } catch (e) { return text; }
+}
+
+async function supabaseUpload(fileName, file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/priests/${fileName}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_SERVICE_KEY,
+      'Authorization': `Bearer ${SUPABASE_SERVICE_KEY}`,
+      'x-upsert': 'true',
+    },
+    body: formData,
+  });
+  
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('Upload failed:', res.status, err);
+    throw new Error(`Upload error ${res.status}: ${err}`);
+  }
+  
+  return `${SUPABASE_URL}/storage/v1/object/public/priests/${fileName}`;
+}
+
+function showToast(message, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+async function loadData() {
+  try {
+    [allPriests, allTransfers] = await Promise.all([
+      supabaseFetch('priests?select=*&order=name.asc'),
+      supabaseFetch('transfers?select=*&order=transfer_date.desc'),
+    ]);
+    document.getElementById('connectionStatus').innerHTML = '<span class="status-dot online"></span> Connected';
+    document.getElementById('priestCount').textContent = `(${allPriests.length} priests)`;
+    renderPriestsTable();
+    renderTransfersTable();
+    populateDropdowns();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('connectionStatus').innerHTML = '<span class="status-dot offline"></span> Offline';
+    showToast('Could not connect. Check internet.', 'error');
+  }
+}
+
+function renderPriestsTable() {
+  const tbody = document.getElementById('priestsTableBody');
+  if (!allPriests.length) { tbody.innerHTML = '<tr><td colspan="7">No priests found.</td></tr>'; return; }
+  tbody.innerHTML = allPriests.map(p => `
+    <tr>
+      <td>${p.image_url ? `<img src="${getImageUrl(p.image_url)}" class="image-preview" onerror="this.style.display='none'">` : '—'}</td>
+      <td><strong>${p.name}</strong></td>
+      <td>${p.title || '—'}</td>
+      <td>${p.station}</td>
+      <td>${p.deanery}</td>
+      <td>${p.phone || '—'}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="editPriest('${p.id}')">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePriest('${p.id}')">🗑️</button>
+      </td>
+    </tr>`).join('');
+}
+
+function renderTransfersTable() {
+  const tbody = document.getElementById('transfersTableBody');
+  if (!allTransfers.length) { tbody.innerHTML = '<tr><td colspan="6">No transfers yet.</td></tr>'; return; }
+  tbody.innerHTML = allTransfers.map(t => {
+    const priest = allPriests.find(p => p.id === t.priest_id);
+    return `<tr>
+      <td>${priest?.name || 'Unknown'}</td>
+      <td>${t.from_station}</td>
+      <td>${t.to_station}</td>
+      <td>${new Date(t.transfer_date).toLocaleDateString()}</td>
+      <td>${t.summary || '—'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteTransfer('${t.id}')">🗑️</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function populateDropdowns() {
+  const opts = allPriests.map(p => `<option value="${p.id}">${p.name} (${p.station})</option>`).join('');
+  document.getElementById('transferPriestSelect').innerHTML = '<option value="">Choose priest...</option>' + opts;
+  document.getElementById('uploadPriestSelect').innerHTML = '<option value="">Choose priest...</option>' + opts;
+}
+
+function getImageUrl(path) {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `${SUPABASE_URL}/storage/v1/object/public/priests/${path}`;
+}
+
+document.getElementById('transferPriestSelect').addEventListener('change', function() {
+  const priest = allPriests.find(p => p.id === this.value);
+  document.getElementById('transferFromStation').value = priest ? priest.station : '';
+  document.getElementById('transferDate').value = new Date().toISOString().split('T')[0];
+});
+
+async function recordTransfer() {
+  const priestId = document.getElementById('transferPriestSelect').value;
+  const fromStation = document.getElementById('transferFromStation').value;
+  const toStation = document.getElementById('transferToStation').value.trim();
+  const transferDate = document.getElementById('transferDate').value;
+  const summary = document.getElementById('transferSummary').value.trim();
+  if (!priestId || !toStation) { showToast('Select priest and enter new station.', 'error'); return; }
+  try {
+    await supabaseFetch('transfers', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify({ priest_id: priestId, from_station: fromStation, to_station: toStation, transfer_date: transferDate, summary }),
+    });
+    await supabaseFetch(`priests?id=eq.${priestId}`, {
+      method: 'PATCH',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify({ station: toStation, updated_at: new Date().toISOString() }),
+    });
+    showToast('✅ Transfer recorded!');
+    document.getElementById('transferToStation').value = '';
+    document.getElementById('transferSummary').value = '';
+    loadData();
+  } catch (e) { showToast('Failed: ' + e.message, 'error'); }
+}
+
+async function deleteTransfer(id) {
+  if (!confirm('Delete this transfer?')) return;
+  try { await supabaseFetch(`transfers?id=eq.${id}`, { method: 'DELETE' }); showToast('Deleted.'); loadData(); }
+  catch (e) { showToast('Failed: ' + e.message, 'error'); }
+}
+
+async function addNewPriest() {
+  const name = document.getElementById('newPriestName').value.trim();
+  const station = document.getElementById('newPriestStation').value.trim();
+  const deanery = document.getElementById('newPriestDeanery').value.trim();
+  if (!name || !station || !deanery) { showToast('Name, Station, Deanery required.', 'error'); return; }
+  const data = {
+    name, station, deanery,
+    title: document.getElementById('newPriestTitle').value.trim(),
+    office: document.getElementById('newPriestOffice').value.trim(),
+    phone: document.getElementById('newPriestPhone').value.trim(),
+    email: document.getElementById('newPriestEmail').value.trim(),
+    biography: document.getElementById('newPriestBio').value.trim(),
+  };
+  try {
+    await supabaseFetch('priests', { method: 'POST', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify(data) });
+    showToast('✅ Priest added!');
+    ['newPriestName','newPriestTitle','newPriestStation','newPriestDeanery','newPriestOffice','newPriestPhone','newPriestEmail','newPriestBio'].forEach(id => document.getElementById(id).value = '');
+    loadData();
+  } catch (e) { showToast('Failed: ' + e.message, 'error'); }
+}
+
+function editPriest(id) {
+  const p = allPriests.find(x => x.id === id); if (!p) return;
+  const n = prompt('Name:', p.name); if (n === null) return;
+  const t = prompt('Title:', p.title || ''); if (t === null) return;
+  const s = prompt('Station:', p.station); if (s === null) return;
+  const d = prompt('Deanery:', p.deanery); if (d === null) return;
+  const ph = prompt('Phone:', p.phone || ''); if (ph === null) return;
+  const em = prompt('Email:', p.email || ''); if (em === null) return;
+  updatePriest(id, { name: n, title: t, station: s, deanery: d, phone: ph, email: em, updated_at: new Date().toISOString() });
+}
+
+async function updatePriest(id, data) {
+  try {
+    await supabaseFetch(`priests?id=eq.${id}`, { method: 'PATCH', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify(data) });
+    showToast('✅ Updated!'); loadData();
+  } catch (e) { showToast('Failed: ' + e.message, 'error'); }
+}
+
+async function deletePriest(id) {
+  const p = allPriests.find(x => x.id === id);
+  if (!confirm(`Delete ${p?.name} and their transfers?`)) return;
+  try { await supabaseFetch(`priests?id=eq.${id}`, { method: 'DELETE' }); showToast('✅ Deleted.'); loadData(); }
+  catch (e) { showToast('Failed: ' + e.message, 'error'); }
+}
+
+let selectedImageFile = null;
+document.getElementById('fileDropZone').addEventListener('click', () => document.getElementById('imageFileInput').click());
+document.getElementById('fileDropZone').addEventListener('dragover', (e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--primary)'; });
+document.getElementById('fileDropZone').addEventListener('dragleave', (e) => { e.currentTarget.style.borderColor = 'var(--border)'; });
+document.getElementById('fileDropZone').addEventListener('drop', (e) => {
+  e.preventDefault(); e.currentTarget.style.borderColor = 'var(--border)';
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) { selectedImageFile = file; showImagePreview(file); }
+});
+document.getElementById('imageFileInput').addEventListener('change', function() {
+  const file = this.files[0];
+  if (file) { selectedImageFile = file; showImagePreview(file); }
+});
+
+function showImagePreview(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('imagePreviewContainer').innerHTML = `
+      <p style="font-size:0.85rem;">Preview:</p>
+      <img src="${e.target.result}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
+      <p style="font-size:0.75rem;">${file.name} (${(file.size/1024).toFixed(1)} KB)</p>`;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadImage() {
+  const priestId = document.getElementById('uploadPriestSelect').value;
+  if (!priestId) { showToast('Select a priest.', 'error'); return; }
+  if (!selectedImageFile) { showToast('Select an image.', 'error'); return; }
+  const priest = allPriests.find(p => p.id === priestId);
+  const ext = selectedImageFile.name.split('.').pop();
+  const safeName = priest.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '.' + ext;
+  try {
+    await supabaseUpload(safeName, selectedImageFile);
+    await supabaseFetch(`priests?id=eq.${priestId}`, { method: 'PATCH', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify({ image_url: safeName, updated_at: new Date().toISOString() }) });
+    showToast('✅ Photo uploaded!');
+    selectedImageFile = null;
+    document.getElementById('imagePreviewContainer').innerHTML = '';
+    document.getElementById('imageFileInput').value = '';
+    loadData();
+  } catch (e) { showToast('Upload failed: ' + e.message, 'error'); }
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+loadData();
+</script>
+</body>
+</html>
