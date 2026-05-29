@@ -435,14 +435,98 @@ async function addNewPriest() {
 }
 
 function editPriest(id) {
-  const p = allPriests.find(x => x.id === id); if (!p) return;
-  const n = prompt('Name:', p.name); if (n === null) return;
-  const t = prompt('Title:', p.title || ''); if (t === null) return;
-  const s = prompt('Station:', p.station); if (s === null) return;
-  const d = prompt('Deanery:', p.deanery); if (d === null) return;
-  const ph = prompt('Phone:', p.phone || ''); if (ph === null) return;
-  const em = prompt('Email:', p.email || ''); if (em === null) return;
-  updatePriest(id, { name: n, title: t, station: s, deanery: d, phone: ph, email: em, updated_at: new Date().toISOString() });
+  const p = allPriests.find(x => x.id === id);
+  if (!p) return;
+
+  const modalBody = `
+    <div style="display:flex;flex-direction:column;gap:0.8rem;">
+      <div>
+        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Full Name</label>
+        <input type="text" id="editName" value="${p.name.replace(/"/g, '&quot;')}" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Title</label>
+        <select id="editTitle" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">
+          <option value="">Select title...</option>
+          <option value="Bishop" ${p.title === 'Bishop' ? 'selected' : ''}>Bishop</option>
+          <option value="Venerable" ${p.title === 'Venerable' ? 'selected' : ''}>Venerable</option>
+          <option value="Reverend Canon" ${p.title === 'Reverend Canon' ? 'selected' : ''}>Reverend Canon</option>
+          <option value="Reverend" ${p.title === 'Reverend' ? 'selected' : ''}>Reverend</option>
+          <option value="Pastor" ${p.title === 'Pastor' ? 'selected' : ''}>Pastor</option>
+          <option value="Evangelist" ${p.title === 'Evangelist' ? 'selected' : ''}>Evangelist</option>
+          <option value="Mission Partner" ${p.title === 'Mission Partner' ? 'selected' : ''}>Mission Partner</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Station</label>
+        <input type="text" id="editStation" value="${p.station.replace(/"/g, '&quot;')}" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Deanery</label>
+        <select id="editDeanery" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">
+          <option value="">Select deanery...</option>
+          <option value="Bishop's Court" ${p.deanery === "Bishop's Court" ? 'selected' : ''}>Bishop's Court</option>
+          <option value="Cathedral" ${p.deanery === 'Cathedral' ? 'selected' : ''}>Cathedral</option>
+          <option value="Agbamu Archdeaconry" ${p.deanery === 'Agbamu Archdeaconry' ? 'selected' : ''}>Agbamu Archdeaconry</option>
+          <option value="Oke-Ola Archdeaconry" ${p.deanery === 'Oke-Ola Archdeaconry' ? 'selected' : ''}>Oke-Ola Archdeaconry</option>
+          <option value="Sanmora Archdeaconry" ${p.deanery === 'Sanmora Archdeaconry' ? 'selected' : ''}>Sanmora Archdeaconry</option>
+          <option value="Igbonla Deanery" ${p.deanery === 'Igbonla Deanery' ? 'selected' : ''}>Igbonla Deanery</option>
+          <option value="Iludun-Oro Deanery" ${p.deanery === 'Iludun-Oro Deanery' ? 'selected' : ''}>Iludun-Oro Deanery</option>
+          <option value="Ipee Deanery" ${p.deanery === 'Ipee Deanery' ? 'selected' : ''}>Ipee Deanery</option>
+          <option value="Igosun Deanery" ${p.deanery === 'Igosun Deanery' ? 'selected' : ''}>Igosun Deanery</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Office</label>
+        <input type="text" id="editOffice" value="${(p.office || '').replace(/"/g, '&quot;')}" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Phone</label>
+        <input type="tel" id="editPhone" value="${(p.phone || '').replace(/"/g, '&quot;')}" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Email</label>
+        <input type="email" id="editEmail" value="${(p.email || '').replace(/"/g, '&quot;')}" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">
+      </div>
+      <div>
+        <label style="font-weight:600;font-size:0.85rem;margin-bottom:0.3rem;">Biography</label>
+        <textarea id="editBio" rows="3" style="width:100%;padding:0.6rem;border:1px solid var(--border-color);border-radius:6px;font-size:0.9rem;">${(p.biography || '').replace(/"/g, '&quot;')}</textarea>
+      </div>
+    </div>
+  `;
+
+  window.DioceseModal.open(`Edit: ${p.name}`, modalBody);
+  
+  // Add save button after modal opens
+  setTimeout(() => {
+    const modalBodyEl = document.getElementById('modal-content-portal');
+    if (modalBodyEl) {
+      const saveBtn = document.createElement('button');
+      saveBtn.textContent = '💾 Save Changes';
+      saveBtn.style.cssText = 'margin-top:1rem;width:100%;padding:0.7rem;border-radius:8px;background:var(--primary-color);color:#fff;border:none;font-weight:700;font-size:0.95rem;cursor:pointer;font-family:inherit;';
+      saveBtn.onclick = async () => {
+        const updatedData = {
+          name: document.getElementById('editName')?.value?.trim() || p.name,
+          title: document.getElementById('editTitle')?.value || p.title,
+          station: document.getElementById('editStation')?.value?.trim() || p.station,
+          deanery: document.getElementById('editDeanery')?.value || p.deanery,
+          office: document.getElementById('editOffice')?.value?.trim() || '',
+          phone: document.getElementById('editPhone')?.value?.trim() || '',
+          email: document.getElementById('editEmail')?.value?.trim() || '',
+          biography: document.getElementById('editBio')?.value?.trim() || '',
+          updated_at: new Date().toISOString(),
+        };
+        
+        if (!updatedData.name || !updatedData.station || !updatedData.deanery) {
+          showToast('Name, Station, and Deanery are required.', 'error');
+          return;
+        }
+        
+        await updatePriest(id, updatedData);
+      };
+      modalBodyEl.appendChild(saveBtn);
+    }
+  }, 100);
 }
 
 async function updatePriest(id, data) {
